@@ -4,7 +4,7 @@
 Joao Martinho  Nº 86454
 Miguel Valerio Nº 86483 """
 
-
+import math
 
 """ ============================ Tipo content ============================ """
 
@@ -119,6 +119,13 @@ def move_final(move):
 
 """ ============================= Tipo board ============================= """
 
+def board_set_pos(board,posit,content):
+    """ Argumentos: board, posit, content
+            board -> Representa o tabuleiro de um jogo de Solitaire.
+            posit -> Posicao.
+            content -> Conteudo a colocar na posicao."""
+    board[pos_l(posit)][pos_c(posit)] = content
+
 def board_moves(board):
     """ Argumento: board
             board -> Representa o tabuleiro de um jogo de Solitaire.
@@ -128,5 +135,31 @@ def board_moves(board):
     for l in range(len(board)):
         for c in range(len(board[l])):
             pos = make_pos(l,c)
+    
+    return
+
+def board_perform_move(board, move):
+    """ Argumentos: board, move
+            board -> Representa o tabuleiro de um jogo de Solitaire.
+            move -> Jogada no jogo Solitaire.
+        Retorno: resultado
+            result -> tabuleiro resultante de aplicar o move ao board."""
+    first = move_initial(move)
+    last = move_final(move)
+    midL = int(math.fabs(pos_l(first)-pos_l(last))//2)
+    midC = int(math.fabs(pos_c(first)-pos_c(last))//2)
+
+    mid = make_pos(midL,midC)
+
+    result = []
+    for line in board:
+        result += [line.copy()]
+    
+    board_set_pos(result, first,c_empty())
+    board_set_pos(result, last,c_peg())
+    board_set_pos(result, mid,c_empty())
+
+    return result
 
 """ ======================================================================= """
+
