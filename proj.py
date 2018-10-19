@@ -6,8 +6,8 @@ Miguel Valerio N 86483 """
 
 
 
-import math
 from search import *
+
 
 
 """ ============================ Tipo content ============================ """
@@ -67,7 +67,7 @@ def make_pos(l, c):
             (l, c) -> Posicao no tabuleiro.
                 l  -> Numero da linha.
                 c  -> Numero da coluna. """
-    return (l, c)
+    return (l,c)
 
 
 def pos_l(pos):
@@ -101,6 +101,13 @@ def pos_get_side(pos, side):
         return make_pos(pos_l(pos)+1, pos_c(pos))
     elif side == 3:
         return make_pos(pos_l(pos), pos_c(pos)-1)
+
+
+def pos_dif(pos_initial, pos_final):
+    d_l = pos_l(pos_final) - pos_l(pos_initial)
+    d_c = pos_c(pos_final) - pos_c(pos_initial)
+    return make_pos(d_l, d_c)
+
 """ ======================================================================= """
 
 
@@ -133,11 +140,32 @@ def move_final(move):
             p_final -> Posicao final. """
     return move[1]
 
+
+def move_get_direction(move):   # 0=>cima; 1=>direita; 2=>baixo; 3=>esquerda
+    dif = pos_dif(move_initial(move), move_final(move))
+
+    d_line = pos_l(dif)
+    d_column = pos_c(dif)
+    if d_line == 0:
+        if d_column < 0:
+            return 3
+        else:
+            return 1
+    else:
+        if d_line < 0:
+            return 0
+        else:
+            return 2
+
+
+def move_eat(move, pcom):
+    return pos_l(move_initial(move)) == pos_l(pcom) and pos_c(move_initial(move)) == pos_c(pcom)
+
 """ ======================================================================= """
 
 
-
 """ ============================= Tipo board ============================= """
+
 
 def board_set_pos(board, posit, content):
     """ Argumentos: board, posit, content
@@ -166,11 +194,11 @@ def board_get_NLines(board):
     return len(board)
 
 
-def board_get_NCollumns(board):
+def board_get_Ncolumns(board):
     """ Argumentos: board
             board -> Representa o tabuleiro de um jogo de Solitaire.
-        Retorno: nCollumns
-            nCollumns -> Numero de colunas do tabuleiro. """
+        Retorno: Ncolumns
+            Ncolumns -> Numero de colunas do tabuleiro. """
     return len(board[0])
 
 
@@ -183,7 +211,7 @@ def is_pos_valid(board, pos):
             False -> Caso Contrario. """
     l = pos_l(pos)
     c = pos_c(pos)
-    if l >= 0 and l < board_get_NLines(board) and c >= 0 and c < board_get_NCollumns(board):
+    if 0 <= l < board_get_NLines(board) and 0 <= c < board_get_Ncolumns(board):
         return True
     return False
 
@@ -194,20 +222,33 @@ def board_moves(board):
         Retorno: movs
             movs -> Lista com todos os movimentos possiveis do tabuleiro. """
     movs = []
-    for l in range(board_get_NLines(board)):
-        for c in range(board_get_NCollumns(board)):
-            pos  = make_pos(l, c)
-            cont = board_get_content(board, pos)
-            if is_peg(cont):
-                for i in range(4):
-                    pos_side  = pos_get_side(pos, i)
-                    pos_final = pos_get_side(pos_side, i)
-                    cont_side = board_get_content(board, pos_side)
-                    cont_final = board_get_content(board, pos_final)
+    nLines = board_get_NLines(board)
+    Ncolumns = board_get_Ncolumns(board)
+    for l in range(nLines):
+        for c in range(Ncolumns):
+            pos = make_pos(l, c)
 
-                    if is_peg(cont_side) and is_empty(cont_final):
-                        movs += [make_move(pos, pos_final)]
+            if is_peg(board_get_content(board, pos)):
+                movs += board_moves_pos(board, pos)
+                """for i in range(4):
+                    pos_side = pos_get_side(pos, i)
+                    pos_final = pos_get_side(pos_side, i)
+
+                    if is_peg(board_get_content(board, pos_side)) and is_empty(board_get_content(board, pos_final)):
+                        movs += [make_move(pos, pos_final)]"""
                         
+    return movs
+
+
+def board_moves_pos(board, pos):
+    movs = []
+    for i in range(4):
+        pos_side = pos_get_side(pos, i)
+        pos_final = pos_get_side(pos_side, i)
+
+        if is_peg(board_get_content(board, pos_side)) and is_empty(board_get_content(board, pos_final)):
+            movs += [make_move(pos, pos_final)]
+
     return movs
 
 
@@ -219,26 +260,28 @@ def board_perform_move(board, move):
             result -> tabuleiro resultante de aplicar o move ao board."""
     first = move_initial(move)
     last = move_final(move)
-    midL = int(math.fabs(pos_l(first)+pos_l(last))//2)
-    midC = int(math.fabs(pos_c(first)+pos_c(last))//2)
+    midL = (pos_l(first)+pos_l(last))//2
+    midC = (pos_c(first)+pos_c(last))//2
 
-    mid = make_pos(midL,midC)
+    mid = make_pos(midL, midC)
 
     result = []
     for line in board:
         result += [line.copy()]
     
     board_set_pos(result, first, c_empty())
-    board_set_pos(result,  last,   c_peg())
-    board_set_pos(result,   mid, c_empty())
+    board_set_pos(result, last, c_peg())
+    board_set_pos(result, mid, c_empty())
 
     return result
 
 
 def board_get_npeg(board):
     npegs = 0
-    for l in range(board_get_NLines(board)):
-        for c in range(board_get_NCollumns(board)):
+    nLines = board_get_NLines(board)
+    nColumns = board_get_Ncolumns(board)
+    for l in range(nLines):
+        for c in range(nColumns):
             pos = make_pos(l, c)
             cont = board_get_content(board, pos)
             if is_peg(cont):
@@ -250,15 +293,113 @@ def board_get_npeg(board):
 
 
 class sol_state:
-    def __init__(self, board):
+    def __init__(self, board, npeg=None, moves=None, nMoves=None):
         self.board = board
-        self.moves = board_moves(self.board)
-        self.npeg = board_get_npeg(self.board)
 
-    def __lt__(self, other):  #self<other
-        return self.npeg > other.npeg
+        if npeg is None:
+            self.npeg = board_get_npeg(self.board)
+        else:
+            self.npeg = npeg
+
+        if moves is None:
+            self.moves = board_moves(board)
+            self.nMoves = len(self.moves)
+        else:
+            self.moves = moves
+            self.nMoves = nMoves
+
+
+    def __lt__(self, other):  # self<other
+        return self.npeg > other.npeg   # FIXME -> se comecar a dar merda entoa falta comparar os moves
+
 
 
 class solitaire(Problem):
     def __init__(self, board):
-        self.super(sol_state(board))
+        Problem.__init__(self, sol_state(board))
+
+    def actions(self, state):
+        return state.moves
+
+    def result(self, state, action):
+        # Pre-comida
+
+        pos_ini = move_initial(action)
+        pos_fin = move_final(action)
+
+        dir = move_get_direction(action)
+        if dir == 0:
+            p1 = make_pos(pos_l(pos_ini)-1, pos_c(pos_ini)+1)
+            p2 = make_pos(pos_l(pos_ini)-1, pos_c(pos_ini)-1)
+        elif dir == 1:
+            p1 = make_pos(pos_l(pos_ini)-1, pos_c(pos_ini)+1)
+            p2 = make_pos(pos_l(pos_ini)+1, pos_c(pos_ini)+1)
+        elif dir == 2:
+            p1 = make_pos(pos_l(pos_ini)+1, pos_c(pos_ini)+1)
+            p2 = make_pos(pos_l(pos_ini)+1, pos_c(pos_ini)-1)
+        else:
+            p1 = make_pos(pos_l(pos_ini)-1, pos_c(pos_ini)-1)
+            p2 = make_pos(pos_l(pos_ini)+1, pos_c(pos_ini)-1)
+
+        # posicao comida
+        pcom = pos_get_side(pos_ini, dir)
+
+        # moves que comem o que comi
+        mv1 = make_move(p1, p2)
+        mv2 = make_move(p2, p1)
+
+        moves = []
+        nMoves = 0
+        for m in state.moves:
+            if move_initial(m) != pcom and move_initial(m) != pos_ini and m != mv1 and m != mv2 and move_eat(m, pos_ini):
+                """ move_initial(m) == pos_ini -> moves que podia fazer
+                    move_initial(m) == pcom -> moves que a comida podia fazer
+                    m != mv1 and m != mv2 -> moves que faziam sobre a comida"""
+                moves += [m.copy()]
+                nMoves += 1
+
+        newBoard = board_perform_move(state.board, action)
+
+        # Pos-comida
+
+        # moves que posso fazer
+        mvs = board_moves_pos(newBoard, move_final(action))
+
+        moves += mvs
+        nMoves += len(mvs)
+
+        # moves que me podem comer
+        posU = pos_get_side(pos_fin, 0)
+        posR = pos_get_side(pos_fin, 1)
+        posD = pos_get_side(pos_fin, 2)
+        posL = pos_get_side(pos_fin, 3)
+
+        if is_peg(board_get_content(newBoard, posU)):
+            if is_empty(board_get_content(newBoard, posD)):
+                moves += [make_move(posU, posD)]
+                nMoves += 1
+
+        if is_peg(board_get_content(newBoard, posD)):
+            if is_empty(board_get_content(newBoard, posU)):
+                moves += [make_move(posD, posU)]
+                nMoves += 1
+
+        if is_peg(board_get_content(newBoard, posR)):
+            if is_empty(board_get_content(newBoard, posL)):
+                moves += [make_move(posR, posL)]
+                nMoves += 1
+
+        if is_peg(board_get_content(newBoard, posL)):
+            if is_empty(board_get_content(newBoard, posR)):
+                moves += [make_move(posL, posR)]
+                nMoves += 1
+
+
+        return sol_state(newBoard, state.npeg-1, moves, nMoves)
+
+    def goal_test(self, state):
+        return state.npeg == 1
+
+    def h(self, node):
+        return node.state.npeg
+
