@@ -98,7 +98,7 @@ def pos_get_side(pos, side):
     elif side == 1:
         return make_pos(pos_l(pos), pos_c(pos)+1)
     elif side ==2:
-        return make_pos(pos_l(pos)-1, pos_c(pos))
+        return make_pos(pos_l(pos)+1, pos_c(pos))
     elif side == 3:
         return make_pos(pos_l(pos), pos_c(pos)-1)
 """ ======================================================================= """
@@ -183,8 +183,7 @@ def is_pos_valid(board, pos):
             False -> Caso Contrario. """
     l = pos_l(pos)
     c = pos_c(pos)
-    if (l >= 0 and l < board_get_NLines(board) and
-        c >= 0 and c < board_get_NCollumns(board)):
+    if l >= 0 and l < board_get_NLines(board) and c >= 0 and c < board_get_NCollumns(board):
         return True
     return False
 
@@ -203,11 +202,10 @@ def board_moves(board):
                 for i in range(4):
                     pos_side  = pos_get_side(pos, i)
                     pos_final = pos_get_side(pos_side, i)
-                    print("pos_side: " + str(pos_side))
-                    print("pos_final: " + str(pos_final))
-                    
-                    if (is_peg(board_get_content(board, pos_side)) and
-                        is_empty(board_get_content(board, pos_final))):
+                    cont_side = board_get_content(board, pos_side)
+                    cont_final = board_get_content(board, pos_final)
+
+                    if is_peg(cont_side) and is_empty(cont_final):
                         movs += [make_move(pos, pos_final)]
                         
     return movs
@@ -220,9 +218,9 @@ def board_perform_move(board, move):
         Retorno: resultado
             result -> tabuleiro resultante de aplicar o move ao board."""
     first = move_initial(move)
-    last  = move_final(move)
-    midL  = int(math.fabs(pos_l(first)-pos_l(last))//2)
-    midC  = int(math.fabs(pos_c(first)-pos_c(last))//2)
+    last = move_final(move)
+    midL = int(math.fabs(pos_l(first)+pos_l(last))//2)
+    midC = int(math.fabs(pos_c(first)+pos_c(last))//2)
 
     mid = make_pos(midL,midC)
 
@@ -236,5 +234,28 @@ def board_perform_move(board, move):
 
     return result
 
+
+def board_get_npeg(board):
+    npegs = 0
+    for l in range(board_get_NLines(board)):
+        for c in range(board_get_NCollumns(board)):
+            pos = make_pos(l, c)
+            cont = board_get_content(board, pos)
+            if is_peg(cont):
+                npegs += 1
+    return npegs
+
+
 """ ======================================================================= """
+
+
+class sol_state:
+    def __init__(self, board):
+        self.board = board
+        self.moves = board_moves(self.board)
+        self.npeg = board_get_npeg(self.board)
+
+    def __lt__(self, other):  #self<other
+        return self.npeg > other.npeg
+
 
