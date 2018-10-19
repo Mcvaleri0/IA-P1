@@ -7,7 +7,7 @@ Miguel Valerio N 86483 """
 
 
 import math
-
+from search import *
 
 
 """ ============================ Tipo content ============================ """
@@ -259,3 +259,6 @@ class sol_state:
         return self.npeg > other.npeg
 
 
+class solitaire(Problem):
+    def __init__(self, board):
+        self.super(sol_state(board))
