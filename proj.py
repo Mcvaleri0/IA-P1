@@ -9,7 +9,6 @@ Miguel Valerio N 86483 """
 from search import *
 
 
-
 """ ============================= Tipo content ============================= """
 
 def c_peg():
@@ -356,7 +355,6 @@ class sol_state:
             self.moves = moves
             self.nMoves = nMoves
 
-
     def __lt__(self, other):
         """ Argumentos: self, other
                 self  -> Instancia do estado de um jogo de Solitaire.
@@ -364,7 +362,7 @@ class sol_state:
             Retorno: True, False
                 True  -> Se self < other.
                 False -> Caso contrario. """
-        return self.npeg > other.npeg   # FIXME -> se comecar a dar merda entoa falta comparar os moves
+        return self.npeg > other.npeg
 
 """ ======================================================================= """
 
@@ -420,7 +418,7 @@ class solitaire(Problem):
         moves = []
         nMoves = 0
         for m in state.moves:
-            if move_initial(m) != pos_ini and not move_eat(m, pos_ini) and move_initial(m) != pcom and m != mv1 and m != mv2:
+            if move_initial(m) != pos_ini and not move_eat(m, pos_ini) and move_initial(m) != pcom and m != mv1 and m !=mv2:
                 """ move_initial(m) == pos_ini -> moves que podia fazer.
                     move_eat(m, pos_ini) -> moves que me comiam.
                     move_initial(m) == pcom -> moves que a comida podia fazer.
@@ -451,7 +449,8 @@ class solitaire(Problem):
                 moves += [make_move(pos_side, pos_side_final)]
                 nMoves += 1
 
-        return sol_state(newBoard, state.npeg-1, moves, nMoves)
+        newState = sol_state(newBoard, state.npeg-1, moves, nMoves)
+        return newState
 
     def goal_test(self, state):
         """ Argumentos: self, state
@@ -468,6 +467,6 @@ class solitaire(Problem):
                 node -> Representacao de um no das arvores de procura.
             Retorno: h(node)
                 h(node) -> Valor atribuido pela funcao heuristica ao no dado. """
-        return node.state.npeg
+        return node.state.npeg - 1
 
 """ ======================================================================= """
