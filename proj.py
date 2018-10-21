@@ -96,7 +96,7 @@ def pos_get_side(pos, side):
         return make_pos(pos_l(pos)-1, pos_c(pos))
     elif side == 1:
         return make_pos(pos_l(pos), pos_c(pos)+1)
-    elif side ==2:
+    elif side == 2:
         return make_pos(pos_l(pos)+1, pos_c(pos))
     elif side == 3:
         return make_pos(pos_l(pos), pos_c(pos)-1)
@@ -362,7 +362,7 @@ class sol_state:
             Retorno: True, False
                 True  -> Se self < other.
                 False -> Caso contrario. """
-        return self.npeg > other.npeg
+        return self.nMoves > other.nMoves + other.npeg
 
 """ ======================================================================= """
 
@@ -393,6 +393,7 @@ class solitaire(Problem):
                             no estado dado. """
         # ----------------------------- Pre-comida -----------------------------
         pos_ini = move_initial(action)
+        pos_fin = move_final(action)
 
         dir = move_get_direction(action)
         if dir == 0:
@@ -418,7 +419,7 @@ class solitaire(Problem):
         moves = []
         nMoves = 0
         for m in state.moves:
-            if move_initial(m) != pos_ini and not move_eat(m, pos_ini) and move_initial(m) != pcom and m != mv1 and m !=mv2:
+            if move_initial(m) != pos_ini and not move_eat(m, pos_ini) and move_initial(m) != pcom and m != mv1 and m != mv2 and move_final(m) != pos_fin:
                 """ move_initial(m) == pos_ini -> moves que podia fazer.
                     move_eat(m, pos_ini) -> moves que me comiam.
                     move_initial(m) == pcom -> moves que a comida podia fazer.
@@ -433,7 +434,6 @@ class solitaire(Problem):
         newBoard = board_perform_move(state.board, action)
 
         # ----------------------------- Pos-comida -----------------------------
-        pos_fin = move_final(action)
 
         # moves que posso fazer
         mvs = board_moves_pos(newBoard, pos_fin)
@@ -441,12 +441,31 @@ class solitaire(Problem):
         nMoves += len(mvs)
 
         # moves que me podem comer
-        for i in range(4):
-            pos_side = pos_get_side(pos_fin, i)
-            pos_side_final = pos_get_opposite_side(pos_fin, i)
+        for i in range(3):
+            pos_side = pos_get_side(pos_fin, (dir - 1 + i)%4)
+            pos_side_final = pos_get_opposite_side(pos_fin, (dir - 1 + i)%4)
 
             if is_peg(board_get_content(newBoard, pos_side)) and is_empty(board_get_content(newBoard, pos_side_final)):
                 moves += [make_move(pos_side, pos_side_final)]
+                nMoves += 1
+
+        # moves que acabam na comida
+        pos_mid = pos_get_side(pos_ini, dir)
+        for i in range(2):
+            pos_side = pos_get_side(pos_mid, (dir - 1 + i*2)%4)
+            pos_side_final = pos_get_side(pos_side, (dir - 1 + i*2)%4)
+
+            if is_peg(board_get_content(newBoard, pos_side)) and is_peg(board_get_content(newBoard, pos_side_final)):
+                moves += [make_move(pos_side_final, pos_mid)]
+                nMoves += 1
+
+        # moves que acabam na posicao inicial
+        for i in range(3):
+            pos_side = pos_get_side(pos_ini, (dir + 1 + i)%4)
+            pos_side_final = pos_get_side(pos_side, (dir + 1 + i)%4)
+
+            if is_peg(board_get_content(newBoard, pos_side)) and is_peg(board_get_content(newBoard, pos_side_final)):
+                moves += [make_move(pos_side_final, pos_ini)]
                 nMoves += 1
 
         newState = sol_state(newBoard, state.npeg-1, moves, nMoves)
@@ -467,6 +486,10 @@ class solitaire(Problem):
                 node -> Representacao de um no das arvores de procura.
             Retorno: h(node)
                 h(node) -> Valor atribuido pela funcao heuristica ao no dado. """
-        return node.state.npeg - 1
+        return node.state.nMoves
 
 """ ======================================================================= """
+
+b1 = greedy_search(solitaire([["O","O","O","X","X"],["O","O","O","O","O"],["O","_","O","_","O"],["O","O","O","O","O"]]))
+print(b1.state.board)
+print(type(b1) is Node)
