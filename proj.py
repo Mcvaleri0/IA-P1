@@ -9,6 +9,7 @@ Miguel Valerio N 86483 """
 from search import *
 
 
+
 """ ============================= Tipo content ============================= """
 
 def c_peg():
@@ -272,7 +273,7 @@ def board_moves(board):
 
                     if is_peg(board_get_content(board, pos_side)) and is_empty(board_get_content(board, pos_final)):
                         movs += [make_move(pos, pos_final)]"""
-                        
+
     return movs
 
 
@@ -290,7 +291,6 @@ def board_moves_pos(board, pos):
 
         if is_peg(board_get_content(board, pos_side)) and is_empty(board_get_content(board, pos_final)):
             movs += [make_move(pos, pos_final)]
-
     return movs
 
 
@@ -356,14 +356,13 @@ class sol_state:
             self.nMoves = nMoves
 
     def __lt__(self, other):
-        """ Argumentos: self, other
-                self  -> Instancia do estado de um jogo de Solitaire.
-                other -> Instancia do estado de um jogo de Solitaire.
-            Retorno: True, False
-                True  -> Se self < other.
-                False -> Caso contrario. """
-        return self.nMoves > other.nMoves + other.npeg
+        return (self.npeg - self.nMoves) < (other.npeg - other.nMoves)
 
+    def __eq__(self, other):
+        return isinstance(other, sol_state) and self.board == other.board
+
+    def __hash__(self):
+        return hash((str(self.board), self.npeg, str(self.moves), self.nMoves))
 """ ======================================================================= """
 
 
@@ -480,16 +479,47 @@ class solitaire(Problem):
                 False -> Caso contratio. """
         return state.npeg == 1
 
-    def h(self, node):  # FIXME -> precisa de melhoras
+    def h(self, node):
         """ Argumentos: self, node
                 self -> Representacao de um jogo de Solitaire.
                 node -> Representacao de um no das arvores de procura.
             Retorno: h(node)
                 h(node) -> Valor atribuido pela funcao heuristica ao no dado. """
-        return node.state.nMoves
+        return node.state.npeg + node.state.nMoves - 1
 
 """ ======================================================================= """
 
-b1 = greedy_search(solitaire([["O","O","O","X","X"],["O","O","O","O","O"],["O","_","O","_","O"],["O","O","O","O","O"]]))
-print(b1.state.board)
-print(type(b1) is Node)
+
+"""
+problems = [solitaire([['_', 'O', 'O', 'O', '_'],['O', '_', 'O', '_', 'O'],['_', 'O', '_', 'O', '_'],['O', '_', 'O', '_', '_'],['_', 'O', '_', '_', '_']]),
+            solitaire([['O', 'O', 'O', 'X'],['O', 'O', 'O', 'O'],['O', '_', 'O', 'O'],['O', 'O', 'O', 'O']]),
+            solitaire([['O', 'O', 'O', 'X', 'X'],['O', 'O', 'O', 'O', 'O'],['O', '_', 'O', '_', 'O'],['O', 'O', 'O', 'O', 'O']]),
+            solitaire([['O', 'O', 'O', 'X', 'X', 'X'],['O', '_', 'O', 'O', 'O', 'O'],['O', 'O', 'O', 'O', 'O', 'O'],['O', 'O', 'O', 'O', 'O', 'O']])]
+header = ["Tipo de Procura", '5x5', '4x4', '4x5', '4x6']
+searchers = [depth_first_graph_search,
+             greedy_search,
+             astar_search]
+
+compare_searchers(problems, header, searchers)
+
+print('< N actions / N goal_test / N result >')"""
+
+# --- 5x5 ---
+#depth_first_graph_search(solitaire([['_', 'O', 'O', 'O', '_'],['O', '_', 'O', '_', 'O'],['_', 'O', '_', 'O', '_'],['O', '_', 'O', '_', '_'],['_', 'O', '_', '_', '_']]))
+#greedy_search(solitaire([['_', 'O', 'O', 'O', '_'],['O', '_', 'O', '_', 'O'],['_', 'O', '_', 'O', '_'],['O', '_', 'O', '_', '_'],['_', 'O', '_', '_', '_']]))
+#astar_search(solitaire([['_', 'O', 'O', 'O', '_'],['O', '_', 'O', '_', 'O'],['_', 'O', '_', 'O', '_'],['O', '_', 'O', '_', '_'],['_', 'O', '_', '_', '_']]))
+
+# --- 4x4 ---
+#depth_first_graph_search(solitaire([['O', 'O', 'O', 'X'],['O', 'O', 'O', 'O'],['O', '_', 'O', 'O'],['O', 'O', 'O', 'O']]))
+#greedy_search(solitaire([['O', 'O', 'O', 'X'],['O', 'O', 'O', 'O'],['O', '_', 'O', 'O'],['O', 'O', 'O', 'O']]))
+#astar_search(solitaire([['O', 'O', 'O', 'X'],['O', 'O', 'O', 'O'],['O', '_', 'O', 'O'],['O', 'O', 'O', 'O']]))
+
+# --- 4x5 ---
+#depth_first_graph_search(solitaire([['O', 'O', 'O', 'X', 'X'],['O', 'O', 'O', 'O', 'O'],['O', '_', 'O', '_', 'O'],['O', 'O', 'O', 'O', 'O']]))
+#greedy_search(solitaire([['O', 'O', 'O', 'X', 'X'],['O', 'O', 'O', 'O', 'O'],['O', '_', 'O', '_', 'O'],['O', 'O', 'O', 'O', 'O']]))
+#astar_search(solitaire([['O', 'O', 'O', 'X', 'X'],['O', 'O', 'O', 'O', 'O'],['O', '_', 'O', '_', 'O'],['O', 'O', 'O', 'O', 'O']]))
+
+# --- 4x6 ---
+#depth_first_graph_search(solitaire([['O', 'O', 'O', 'X', 'X', 'X'],['O', '_', 'O', 'O', 'O', 'O'],['O', 'O', 'O', 'O', 'O', 'O'],['O', 'O', 'O', 'O', 'O', 'O']]))
+#greedy_search(solitaire([['O', 'O', 'O', 'X', 'X', 'X'],['O', '_', 'O', 'O', 'O', 'O'],['O', 'O', 'O', 'O', 'O', 'O'],['O', 'O', 'O', 'O', 'O', 'O']]))
+#astar_search(solitaire([['O', 'O', 'O', 'X', 'X', 'X'],['O', '_', 'O', 'O', 'O', 'O'],['O', 'O', 'O', 'O', 'O', 'O'],['O', 'O', 'O', 'O', 'O', 'O']]))
